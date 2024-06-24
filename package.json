@@ -1,0 +1,16 @@
+{
+  "name": "project-setup",
+  "version": "1.0.0",
+  "description": "My First Project for backend",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "Javascript",
+    "Backend",
+    "nodejs"
+  ],
+  "author": "Sumit Gupta",
+  "license": "ISC"
+}
