@@ -1,6 +1,6 @@
 import mongoose, { SchemaTypes } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
-import { User } from "./user.models";
+import { User } from "../models/user.models.js";
 const VideoSchema = new mongoose.Schema(
     {
         videofile:{
@@ -12,8 +12,7 @@ const VideoSchema = new mongoose.Schema(
             required:true
         },
         owner:{
-            type:Schema.Types.ObjectId,
-            ref:User
+            type : String
         },
         title:{
             type:String,
