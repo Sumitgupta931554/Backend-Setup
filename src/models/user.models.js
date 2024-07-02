@@ -1,6 +1,11 @@
 import mongoose, { Schema } from "mongoose";
 import { Video } from "./video.models.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv"
+dotenv.config()
+
+
 const userSchema = new mongoose.Schema(
     {
         username:{
@@ -56,9 +61,9 @@ userSchema.pre("save",async function (next){
     next();
 })
 userSchema.methods.isPasswordCorrect=async function(password){
-    return await bcrypt.compare(this.password,password)
+    return await bcrypt.compare(password,this.password)
 }
-userSchema.method.generateAccessToken = async function(){
+userSchema.methods.generateAccessToken =async function(){
     return jwt.sign(
         {
             _id:this._id,
@@ -68,18 +73,21 @@ userSchema.method.generateAccessToken = async function(){
         },
         process.env.ACCESS_TOKEN_SECRET,
         {
-            expireIn:process.env.ACCESS_TOKEN_EXPIRY
+            expiresIn:'1h'
         }
     )
 }
-userSchema.method.generateRefreshToken = async function(){
+userSchema.methods.generateRefreshToken =async function(){
     return jwt.sign(
         {
-            _id:this._id
+            _id:this._id,
+            email:this.email,
+            fullname:this.fullname,
+            username:this.username
         },
-        process.env.REFRESH_TOKEN_SECRET,
+        process.env.ACCESS_TOKEN_SECRET,
         {
-            expireIn:process.env.REFRESH_TOKEN_EXPIRY
+            expiresIn:'1h'
         }
     )
 }

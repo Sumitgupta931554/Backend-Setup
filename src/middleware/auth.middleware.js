@@ -4,15 +4,16 @@ import jwt from "jsonwebtoken";
 import {User} from "../models/user.models.js"
 
 export const veriftJWT = asyncHandler(async (req,_,next)=>{
-    const token =await req.cookies?.accessToken||req.header("Authorisation")?.replace("Bearer ","")
+    const token =req.cookies?.accessToken || req.header("Authorization")?.replace("Bearer ", "")
+    // console.log(req.cookies?.accessToken);
     if(!token){
         throw new ApiError(401,"Unauthorized Access")
     }
-    const decodeToken =jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
+    const decodeToken = jwt.verify(token,process.env.ACCESS_TOKEN_SECRET)
     const user = await User.findById(decodeToken?._id).select(" -password -refreshtoken")
     if(!user){
         throw new ApiError(400,"Invalid Access Token")
     }
-    req.User=user;
+    req.user=user;
     next();
 })
