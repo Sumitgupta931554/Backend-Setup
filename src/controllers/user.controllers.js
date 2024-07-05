@@ -350,6 +350,12 @@ const getUserHistory = asyncHandler(async(req ,res)=>{
                             }
                         }]
                     }
+                },{
+                    $addfield:{
+                        owner:{
+                            $first:"$owner"
+                        }
+                    }
                 }]
             }
         }
