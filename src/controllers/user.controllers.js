@@ -328,7 +328,9 @@ const getUserProfile = asyncHandler(async (req,res)=>{
 const getUserHistory = asyncHandler(async(req ,res)=>{
     const user= await User.aggregate([
         {
-            $match:new moongose.Types.ObjectId(req.user._id)
+            $match:{
+                _id:new moongose.Types.ObjectId(req.user._id)
+            }
         },
         {
             $lookup:{
