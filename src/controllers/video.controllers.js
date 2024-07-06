@@ -42,6 +42,9 @@ const publishAVideo=asyncHandler(async (req,res)=>{
 })
 const getVideoById = asyncHandler(async (req,res)=>{
     const { videoId } = req.params
+    if (!videoId) {
+        throw new ApiError(400,"Video ID not Found")
+    }
     const video  = await Video.aggregate([
         {
             $match:{
@@ -81,6 +84,9 @@ const getVideoById = asyncHandler(async (req,res)=>{
 })
 const updateVideo = asyncHandler(async(req,res)=>{
     const {videoId} = req.params
+    if (!videoId) {
+        throw new ApiError(400,"Video ID not Found")
+    }
     const {thumbnail,title,description}=req.body
     if (!(thumbnail||title||description)) {
         throw new ApiError(200,"All Fields are Required")
@@ -108,6 +114,9 @@ const updateVideo = asyncHandler(async(req,res)=>{
 })
 const deleteVideo = asyncHandler(async(req,res)=>{
     const {videoId} = req.params
+    if (!videoId) {
+        throw new ApiError(400,"Video ID not Found")
+    }
     try {
         await Video.deleteOne(videoId)
     } catch (error) {
