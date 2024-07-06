@@ -1,8 +1,8 @@
 import mongoose,{Schema} from "mongoose";
-import { User } from "./user.models";
-import { Video } from "./video.models";
-import { Comment } from "./comments.models";
-import { Tweet } from "./tweets.models";
+import { User } from "../models/user.models.js";
+import { Video } from "../models/video.models.js";
+import { Comment } from "../models/comments.models.js";
+import { Tweet } from "../models/tweets.models.js";
 
 const likesSchema =new mongoose.Schema(
     {
@@ -12,7 +12,7 @@ const likesSchema =new mongoose.Schema(
         },
         video:{
             type:Schema.Types.ObjectId,
-            ref: Video
+            ref:Video
         },
         comment:{
             type:Schema.Types.ObjectId,
