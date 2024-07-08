@@ -9,7 +9,45 @@ const getVideoComments = asyncHandler(async (req, res) => {
     //TODO: get all comments for a video
     const {videoId} = req.params
     const {page = 1, limit = 10} = req.query
-
+    if (!videoId||!isValidObjectId(videoId)) {
+        throw new ApiError(400,"There is No such Video Exist")
+    }
+    const comment = await Comment.aggregate([
+        {
+            $match:{
+                video:new mongoose.Types.ObjectId(videoId)
+            }
+        },
+        {
+            $lookup:{
+                from:"User",
+                localfield:"owner",
+                foreignfield:"_id",
+                as:"owner",
+                pipeline:[
+                    {
+                        $project:{
+                            avatar:1,
+                            username:1,
+                            fullname:1
+                        }
+                    }
+                ]
+            }
+        },{
+            $addfield:{
+                owner:"$owner"
+            }
+        },
+        {$skip:(page-1)*limit},
+        {$limit:limit}
+    ])
+    if (!comment) {
+        throw new ApiError(400,"There is no Comment on this Video")
+    }
+    return res
+    .status(200)
+    .json(new ApiResponse(201,comment,"Video Comments Fetched Successfully"))
 })
 
 const addComment = asyncHandler(async (req, res) => {
@@ -43,7 +81,7 @@ const addComment = asyncHandler(async (req, res) => {
     .json(new ApiResponse(201,addComment,"Comment added Successfully"))
 
 })
-
+//need to change update comment
 const updateComment = asyncHandler(async (req, res) => {
     // TODO: update a comment
     const {videoId} = req.params
