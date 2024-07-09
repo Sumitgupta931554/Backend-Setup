@@ -3,6 +3,11 @@ import asyncHandler from "../utils/asyncHandler.js";
 import {User} from "../models/user.models.js";
 import uploadOnCloudnary from "../utils/Cloudnary.js"
 import ApiResponse from "../utils/ApiResponse.js";
+import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
+import dotenv from "dotenv"
+dotenv.config()
 
 
 const generateAccessAndRefreshToken=async ( user_id )=>{
@@ -140,37 +145,38 @@ const loggedOutUser = asyncHandler(async (req,res)=>{
 })
 
 const refreshAccessToken = asyncHandler(async (req,res)=>{
-    const incomingRefreshtoken =await req.cookie?.refreshToken||req.body?.refreshToken
+    const incomingRefreshtoken = req.cookies.refreshToken||req.body.refreshToken
     if(!incomingRefreshtoken){
         throw new ApiError(400,"Refresh Token Expires")
     }
-    try {
-        const decodeToken = jwt.verify(incomingRefreshtoken,process.env.REFRESH_TOKEN_SECRET)
-    
-        const user = await User.findById(decodeToken._id)
-        if (!user) {
-            throw new ApiError(400,"Session Expires")
-        }
-        if (incomingRefreshtoken!==user.refreshtoken) {
-            throw new ApiError(400,"Invalid User")  
-        }
-        const {accessToken,newrefreshToken} = await generateAccessAndRefreshToken(user._id)
-        const option={
-            httpOnly:true,
-            secure:true
-        }
-        return res
-        .status(200)
-        .cookie("accessToken",accessToken,option)
-        .cookie("refreshToken",newrefreshToken,option)
-        .json(new ApiResponse(200 , 
-            {
-                accessToken,refreshToken:newrefreshToken
+        try {
+            const decodeToken = jwt.verify(incomingRefreshtoken,process.env.ACCESS_TOKEN_SECRET)
+        
+            const user = await User.findById(decodeToken?._id)
+            if (!user) {
+                throw new ApiError(400,"Session Expires")
             }
-        ))
-    } catch (error) {
-        throw new ApiError(401,error?.message||"Invalid Refresh Token")
-    }
+            if (incomingRefreshtoken!==user.refreshtoken) {
+                throw new ApiError(400,"Invalid User")  
+            }
+            const {accessToken,refreshToken} = await generateAccessAndRefreshToken(user._id)
+            const option={
+                httpOnly:true,
+                secure:true
+            }
+            return res
+            .status(200)
+            .cookie("accessToken",accessToken,option)
+            .cookie("refreshToken",refreshToken,option)
+            .json(new ApiResponse(200 , 
+                {
+                    accessToken:accessToken,
+                    refreshToken:refreshToken
+                },"Access Token refreshed"
+            ))
+        } catch (error) {
+            throw new ApiError(401, error?.message || "Invalid refresh token");
+        }
 })
 const changePassword =asyncHandler(async (req,res)=>{
     const {oldPassword,newPassword}=req.body
@@ -218,7 +224,7 @@ return res
 .json(new ApiResponse(200,user,"Details Update Succesfully"))
 })
 const updateAvatar = asyncHandler(async (req,res)=>{
-    const avatarLocalPath = await req.files?.avatar?.path
+    const avatarLocalPath = await req.file?.path
     if (!avatarLocalPath) {
         throw new ApiError(401,"Avatar Image Is Required")
     }
@@ -240,13 +246,13 @@ const updateAvatar = asyncHandler(async (req,res)=>{
 
 })
 const updateCoverImage = asyncHandler(async (req,res)=>{
-    const coverImageLocalPath = await req.files?.avatar?.path
+    const coverImageLocalPath = await req.file?.path
     if (!coverImageLocalPath) {
-        throw new ApiError(401,"Avatar Image Is Required")
+        throw new ApiError(401,"Cover Image Is Required")
     }
     const coverImage = await uploadOnCloudnary(coverImageLocalPath)
     if (!coverImage.url) {
-        throw new ApiError(401,"Failed to Uplaod Avatar Image")
+        throw new ApiError(401,"Failed to Uplaod Cover Image")
     }
     const user = await User.findByIdAndUpdate(req.user._id,{
         $set:{
@@ -261,7 +267,7 @@ const updateCoverImage = asyncHandler(async (req,res)=>{
     .json(new ApiResponse(200,user,"Cover Image Upadated Successfully"))
 })
 const getUserProfile = asyncHandler(async (req,res)=>{
-    const {username}=req.param
+    const {username}=req.params
     if (!username?.trim()) {
         throw new ApiError(400,"Username is Missing")
     }
@@ -274,21 +280,21 @@ const getUserProfile = asyncHandler(async (req,res)=>{
         {
             $lookup:{
                 from:"subscriptions",
-                localfield:"_id",
-                foreignfield:"channel",
+                localField:"_id",
+                foreignField:"channel",
                 as:"Subscribers"
             }
         },
         {
             $lookup:{
                 from:"subcrioptions",
-                localfield:"_id",
-                foriegnfield:"subscriber",
+                localField:"_id",
+                foreignField:"subscriber",
                 as:"Subscribedto"
             }
         },
         {
-            $addfield:{
+            $addFields:{
                 subscriberCount:{
                     $size:"$Subscribers"
                 },
@@ -329,20 +335,20 @@ const getUserHistory = asyncHandler(async(req ,res)=>{
     const user= await User.aggregate([
         {
             $match:{
-                _id:new moongose.Types.ObjectId(req.user._id)
+                _id:new mongoose.Types.ObjectId(req.user._id)
             }
         },
         {
             $lookup:{
                 from:"videos",
-                localfield:"watchhistory",
-                foreignfield:"_id",
+                localField:"watchhistory",
+                foreignField:"_id",
                 as :"watchHistory",
                 pipeline:[{
                     $lookup:{
                         from:"users",
-                        localfield:"owner",
-                        foreignfield:"_id",
+                        localField:"owner",
+                        foreignField:"_id",
                         as:"owner",
                         pipeline:[{
                             $project:{
@@ -353,7 +359,7 @@ const getUserHistory = asyncHandler(async(req ,res)=>{
                         }]
                     }
                 },{
-                    $addfield:{
+                    $addFields:{
                         owner:{
                             $first:"$owner"
                         }
