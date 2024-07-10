@@ -26,4 +26,8 @@ app.use("/api/v1/user",userRouter)
 import videoRouter from "./routes/video.routes.js"
 app.use("/api/v1/video",videoRouter)
 
+//importing subscription router
+import subscriptionRouter from "./routes/subscription.routes.js"
+app.use("/api/v1/subs",subscriptionRouter)
+
 export default app;

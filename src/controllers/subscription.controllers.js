@@ -1,9 +1,9 @@
 import mongoose, {isValidObjectId} from "mongoose"
-import {User} from "../models/user.model.js"
-import { Subscription } from "../models/subscription.model.js"
-import {ApiError} from "../utils/ApiError.js"
-import {ApiResponse} from "../utils/ApiResponse.js"
-import {asyncHandler} from "../utils/asyncHandler.js"
+import {User} from "../models/user.models.js"
+import  {Subscription}  from "../models/subscription.models.js"
+import ApiError from "../utils/ApiError.js"
+import ApiResponse from "../utils/ApiResponse.js"
+import asyncHandler from "../utils/asyncHandler.js"
 
 
 const toggleSubscription = asyncHandler(async (req, res) => {
@@ -12,7 +12,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         throw new ApiError(400,"Channel not found")
     }
     // TODO: toggle subscription
-    const {userId}= req.user._id
+    const userId = req.user._id
     if(!userId||!isValidObjectId(userId)){
         throw new ApiError(400,"User is Required")
     }
@@ -63,9 +63,9 @@ const getUserChannelSubscribers = asyncHandler(async (req, res) => {
         },
         {
             $lookup:{
-                from:"User",
-                localfield:"subscriber",
-                foreignfield:"_id",
+                from:"subscriptions",
+                localField:"subscribers",
+                foreignField:"_id",
                 as :"SubscriberList",
                 pipeline:[
                     {
@@ -101,9 +101,9 @@ const getSubscribedChannels = asyncHandler(async (req, res) => {
         },
         {
             $lookup:{
-                from:"User",
-                localfield:"channel",
-                foreignfield:"_id",
+                from:"users",
+                localField:"channel",
+                foreignField:"_id",
                 as :"ChannelList",
                 pipeline:[
                     {
